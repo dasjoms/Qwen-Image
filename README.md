@@ -94,6 +94,19 @@ image = pipe(
 image.save("example.png")
 ```
 
+### LoRA Training
+
+A minimal LoRA fine-tuning script and a Gradio web UI are available in
+`src/train_lora.py` and `src/train_lora_ui.py`:
+
+```bash
+python src/train_lora_ui.py
+```
+
+The UI accepts a Hugging Face model URL (for example,
+`https://huggingface.co/Qwen/Qwen-Image/tree/main`) and downloads the model into
+the local directory structure required for training.
+
 ## Show Cases
 
 One of its standout capabilities is high-fidelity text rendering across diverse images. Whether it's alphabetic languages like English or logographic scripts like Chinese, Qwen-Image preserves typographic details, layout coherence, and contextual harmony with stunning accuracy. Text isn't just overlaid, it's seamlessly integrated into the visual fabric.

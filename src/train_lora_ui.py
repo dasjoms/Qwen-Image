@@ -6,11 +6,31 @@ import threading
 import time
 from typing import List
 from pathlib import Path
+from urllib.parse import urlparse
 
 import gradio as gr
 from PIL import Image
+from huggingface_hub import snapshot_download
 
 from train_lora import train
+
+
+def _download_model_if_needed(model: str) -> str:
+    """Download a Hugging Face model URL to a local directory."""
+    if model.startswith("http://") or model.startswith("https://"):
+        parsed = urlparse(model)
+        repo_id = parsed.path.strip("/")
+        if repo_id.endswith("/tree/main"):
+            repo_id = repo_id[: -len("/tree/main")]
+        elif "/tree/" in repo_id:
+            repo_id = repo_id.split("/tree/")[0]
+        local_dir = snapshot_download(
+            repo_id,
+            local_dir=Path("models") / repo_id.replace("/", "_"),
+            local_dir_use_symlinks=False,
+        )
+        return str(local_dir)
+    return model
 
 
 def run_training(
@@ -27,6 +47,7 @@ def run_training(
     rank: int,
     num_inference_steps: int,
 ):
+    pretrained_model = _download_model_if_needed(pretrained_model)
     prompts = [line.strip() for line in sample_prompts_text.splitlines() if line.strip()]
     args = argparse.Namespace(
         train_dir=train_dir,
@@ -63,7 +84,7 @@ def build_ui() -> gr.Blocks:
         with gr.Row():
             train_dir = gr.Textbox(label="Training Directory")
             output_dir = gr.Textbox(label="Output Directory", value="qwen_image_lora")
-        pretrained_model = gr.Textbox(label="Pretrained Model", value="Qwen/Qwen-Image")
+        pretrained_model = gr.Textbox(label="Pretrained Model or HF Link", value="Qwen/Qwen-Image")
         with gr.Row():
             resolution = gr.Number(label="Resolution", value=1024)
             train_batch_size = gr.Number(label="Train Batch Size", value=1)
